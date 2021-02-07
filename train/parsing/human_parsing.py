@@ -105,4 +105,4 @@ class Parsing:
                 elif parsing_result[i][j] == 14:
                     parsing_result[i][j] = 11
 
-        return Image.fromarray(np.uint8(parsing_result)).convert('RGB')
+        return Image.fromarray(np.uint8(parsing_result)).convert('L')

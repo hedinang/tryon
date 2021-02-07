@@ -159,8 +159,11 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):  # 200 epoch
         # có chiều dài là radius = 5
         # data['mask'] là ảnh random mask người
 
-        losses, fake_image, real_image, input_label, L1_loss, style_loss, clothes_mask, warped, refined, CE_loss, rx, ry, cx, cy, rg, cg = model(Variable(data['label'].cuda()), Variable(data['edge'].cuda()), Variable(
-            img_fore.cuda()), Variable(mask_clothes.cuda()), Variable(data['color'].cuda()), Variable(all_clothes_label.cuda()), Variable(data['image'].cuda()), Variable(data['pose'].cuda()), Variable(data['mask'].cuda()))
+        losses, fake_image, real_image, input_label, L1_loss, style_loss,\
+            clothes_mask, warped, refined, CE_loss, rx, ry, cx, cy, rg, cg = model(data['label'].cuda(), data['edge'].cuda(),
+                                                                                   img_fore.cuda(), mask_clothes.cuda(
+            ), data['color'].cuda(),
+                all_clothes_label.cuda(), data['image'].cuda(), data['pose'].cuda(), data['mask'].cuda())
 
         # sum per device losses
         losses = [torch.mean(x) if not isinstance(x, int)

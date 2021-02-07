@@ -125,6 +125,7 @@ class AlignedDataset:
 
         # A_path = self.A_paths[index]
         A = self.parsing(B)
+        
 
         transform_A = get_transform(
             self.opt, params, method=Image.NEAREST, normalize=False)
