@@ -1,4 +1,3 @@
-
 import os.path
 from data.image_folder import make_dataset, get_params, get_transform, normalize
 from PIL import Image
@@ -14,52 +13,6 @@ from parsing.human_parsing import Parsing
 
 
 class AlignedDataset:
-
-    def _box2cs(self, box):
-        x, y, w, h = box[:4]
-        return self._xywh2cs(x, y, w, h)
-
-    def _xywh2cs(self, x, y, w, h):
-        center = np.zeros((2), dtype=np.float32)
-        center[0] = x + w * 0.5
-        center[1] = y + h * 0.5
-        if w > self.aspect_ratio * h:
-            h = w * 1.0 / self.aspect_ratio
-        elif w < self.aspect_ratio * h:
-            w = h * self.aspect_ratio
-        scale = np.array([w, h], dtype=np.float32)
-        return center, scale
-
-    def __getitem__(self, index):
-        img_name = self.file_list[index]
-        img_path = os.path.join(self.root, img_name)
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        h, w, _ = img.shape
-
-        # Get person center and scale
-        person_center, s = self._box2cs([0, 0, w - 1, h - 1])
-        r = 0
-        trans = get_affine_transform(person_center, s, r, self.input_size)
-        input = cv2.warpAffine(
-            img,
-            trans,
-            (int(self.input_size[1]), int(self.input_size[0])),
-            flags=cv2.INTER_LINEAR,
-            borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(0, 0, 0))
-
-        input = self.transform(input)
-        meta = {
-            'name': img_name,
-            'center': person_center,
-            'height': h,
-            'width': w,
-            'scale': s,
-            'rotation': r
-        }
-
-        return input, meta
-
     def __init__(self, opt):
         self.parsing = Parsing()
         self.opt = opt
@@ -125,7 +78,6 @@ class AlignedDataset:
 
         # A_path = self.A_paths[index]
         A = self.parsing(B)
-        
 
         transform_A = get_transform(
             self.opt, params, method=Image.NEAREST, normalize=False)
@@ -148,9 +100,10 @@ class AlignedDataset:
         C_tensor = transform_B(C)
 
         # Edge
-        E_path = self.E_paths[1]
-        # print(E_path)
-        E = Image.open(E_path).convert('L')
+        E = cv2.imread(B_path, 0)
+        ret, E = cv2.threshold(E, 240, 255, cv2.THRESH_BINARY_INV)
+
+        E = Image.fromarray(E)
         E_tensor = transform_A(E)
 
         # Pose

@@ -1,16 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-OpenPose body pose model.
-Created on Wed Sep 11 19:00:00 2019
-Author: Prasun Roy | CVPRU-ISICAL (http://www.isical.ac.in/~cvpr)
-GitHub: https://github.com/prasunroy/openpose-pytorch
-
-Original author: Zhizhong Huang
-Original source: https://github.com/Hzzone/pytorch-openpose
-
-"""
-
-
 import torch
 from collections import OrderedDict
 

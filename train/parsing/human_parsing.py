@@ -79,6 +79,8 @@ class Parsing:
             upsample_output.data.cpu().numpy(), c, s, w, h, input_size=self.input_size)
         parsing_result = np.argmax(logits_result, axis=2)
 
+
+
         for i in range(h):
             for j in range(w):
                 if parsing_result[i][j] == 1 or parsing_result[i][j] == 3 or parsing_result[i][j] == 4 or\

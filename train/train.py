@@ -79,6 +79,19 @@ def changearm(old_label):
     label = label*(1-noise)+noise*4
     return label
 
+def changearm2(old_label):
+    label = old_label
+    arm1 = torch.FloatTensor(
+        (data['label'].cpu().numpy() == 11).astype(np.int))
+    arm2 = torch.FloatTensor(
+        (data['label'].cpu().numpy() == 13).astype(np.int))
+    noise = torch.FloatTensor(
+        (data['label'].cpu().numpy() == 7).astype(np.int))
+    label = label*(1-arm1)+arm1*4
+    label = label*(1-arm2)+arm2*4
+    label = label*(1-noise)+noise*4
+    return label
+
 
 os.makedirs('sample', exist_ok=True)
 opt = Options().parse()
@@ -146,6 +159,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):  # 200 epoch
         img_fore = data['image']*mask_fore
         img_fore_wc = img_fore*mask_fore  # ko dùng
         all_clothes_label = changearm(data['label'])
+
+
         ############## Forward Pass ######################
 
         # data['label'] là ảnh semantic segmentation trong thư mục train label
