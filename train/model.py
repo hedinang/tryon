@@ -919,14 +919,14 @@ class Fashion(torch.nn.Module):
                 self.G2, 'G2', opt.which_epoch, pretrained_path)
             self.load_network(
                 self.G, 'G', opt.which_epoch, pretrained_path)
-            # self.load_network(
-            #     self.D, 'D', opt.which_epoch, pretrained_path)
-            # self.load_network(
-            #     self.D1, 'D1', opt.which_epoch, pretrained_path)
-            # self.load_network(
-            #     self.D2, 'D2', opt.which_epoch, pretrained_path)
-            # self.load_network(
-            #     self.D3, 'D3', opt.which_epoch, pretrained_path)
+            self.load_network(
+                self.D, 'D', opt.which_epoch, pretrained_path)
+            self.load_network(
+                self.D1, 'D1', opt.which_epoch, pretrained_path)
+            self.load_network(
+                self.D2, 'D2', opt.which_epoch, pretrained_path)
+            self.load_network(
+                self.D3, 'D3', opt.which_epoch, pretrained_path)
 
     def generate_discrete_label(self, inputs, label_nc, onehot=True, encode=True):
         pred_batch = []
@@ -1147,6 +1147,7 @@ class Fashion(torch.nn.Module):
         fake_image = self.G.refine(G_in.detach())
         fake_image = self.tanh(fake_image)
         # THE POOL TO SAVE IMAGES
+
 
         input_pool = [G1_in, G2_in, G_in, torch.cat(
             [clothes_mask, clothes], 1)]  # fake_cl_dis to replace

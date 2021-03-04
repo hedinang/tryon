@@ -77,7 +77,8 @@ class AlignedDataset:
         B_tensor = transform_B(B)
 
         # A_path = self.A_paths[index]
-        A = self.parsing(B)
+        A = cv2.imread(B_path, cv2.IMREAD_COLOR)
+        A = self.parsing(A)
 
         transform_A = get_transform(
             self.opt, params, method=Image.NEAREST, normalize=False)
@@ -100,7 +101,7 @@ class AlignedDataset:
         C_tensor = transform_B(C)
 
         # Edge
-        E = cv2.imread(B_path, 0)
+        E = cv2.imread(C_path, 0)
         ret, E = cv2.threshold(E, 240, 255, cv2.THRESH_BINARY_INV)
 
         E = Image.fromarray(E)

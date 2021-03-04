@@ -9,7 +9,7 @@ import cv2
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from parsing.transforms import transform_logits
+from parsing.transforms import transform_logits, get_affine_transform
 from collections import OrderedDict
 from parsing.AugmentCE2P import resnet101
 
@@ -58,16 +58,23 @@ class Parsing:
             transforms.Normalize(mean=[0.406, 0.456, 0.485], std=[
                 0.225, 0.224, 0.229])
         ])
-        w, h = image.size
-        image = transform(image)
-        image = torch.unsqueeze(image, 0)
+        h, w, _ = image.shape
+
         # Get person center and scale
         person_center, s = self._box2cs([0, 0, w - 1, h - 1])
-        c = person_center
-        # s = s
-        # w = w
-        # h = h
-
+        # c = person_center
+        r = 0
+        input_size = [473, 473]
+        trans = get_affine_transform(person_center, s, r, input_size)
+        image = cv2.warpAffine(
+            image,
+            trans,
+            (int(self.input_size[1]), int(self.input_size[0])),
+            flags=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(0, 0, 0))
+        image = transform(image)
+        image = torch.unsqueeze(image, 0)
         output = model(image)
         upsample = torch.nn.Upsample(
             size=self.input_size, mode='bilinear', align_corners=True)
@@ -76,10 +83,8 @@ class Parsing:
         upsample_output = upsample_output.permute(
             1, 2, 0)  # CHW -> HWC
         logits_result = transform_logits(
-            upsample_output.data.cpu().numpy(), c, s, w, h, input_size=self.input_size)
+            upsample_output.data.cpu().numpy(), person_center, s, w, h, input_size=self.input_size)
         parsing_result = np.argmax(logits_result, axis=2)
-
-
 
         for i in range(h):
             for j in range(w):
