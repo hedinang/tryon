@@ -2,27 +2,25 @@ from human_parsing import Parsing
 import os
 import cv2
 from PIL import Image
-root_dir = '/home/dung/Project/AI/DeepFashion_Try_On/Data_preprocessing/train_img'
-sub_dir = '/home/dung/Project/AI/tryon/convert/label'
-ref_dir = '/home/dung/Project/AI/tryon/convert/label_ref'
+import json
+from tqdm import tqdm
+from estimator import BodyPoseEstimator
+root_dir = '/home/dung/Project/AI/DeepFashion_Try_On/Data_preprocessing/ACGPN_traindata/train_img'
+label_dir = '/home/dung/Project/AI/tryon/convert/train_label'
+pose_dir = '/home/dung/Project/AI/tryon/convert/train_pose'
+edge_dir = '/home/dung/Project/AI/tryon/convert/train_edge'
 folder = os.listdir(root_dir)
 parsing = Parsing()
-
-# palette = [0, 0, 0,
-#            15, 15, 15,
-#            30, 30, 30,
-#            45, 45, 45,
-#            60, 60, 60,
-#            75, 75, 75,
-#            90, 90, 90,
-#            105, 105, 105,
-#            120, 120, 120,
-#            135, 135, 135,
-#            150, 150, 150,
-#            165, 165, 165,
-#            190, 190, 190,
-#            205, 205, 205]
-
+# f = '013312_0.jpg'
+# image_src = cv2.imread('{}/{}'.format(root_dir, f), cv2.IMREAD_COLOR)
+# img = parsing(image_src)
+# img.save('{}/{}.png'.format(label_dir, f.split('.')[0]))
+# estimator = BodyPoseEstimator(
+#     '/home/dung/Project/AI/tryon/checkpoints/openpose_body_coco_pose_iter_440000.pth')
+# pose_data = estimator(image_src)
+# with open('{}/{}_keypoints.json'.format(pose_dir, f.split('.')[0]), 'w') as outfile:
+#     json.dump(pose_data.tolist(), outfile)
+# print('aaa')
 
 def get_palette(num_cls):
     """ Returns the color map for visualizing the segmentation mask.
@@ -49,11 +47,21 @@ def get_palette(num_cls):
 
 
 palette = get_palette(20)
-for i, f in enumerate(folder):
-    ref = Image.open('{}/train_label/{}.png'.format(root_dir.split('/train_')[0], f.split('.')[0]))
-    img = cv2.imread('{}/{}'.format(root_dir, f), cv2.IMREAD_COLOR)
-    img = parsing(img)
-    ref.putpalette(palette)
-    img.putpalette(palette)
-    img.save('{}/{}.png'.format(sub_dir, f.split('.')[0]))
-    ref.save('{}/{}.png'.format(ref_dir, f.split('.')[0]))
+
+# folder = ['013624_0.jpg']
+for i, f in enumerate(tqdm(folder)):
+    image_src = cv2.imread('{}/{}'.format(root_dir, f), cv2.IMREAD_COLOR)
+    # human parsing
+    # img = parsing(image_src)
+    # img.save('{}/{}.png'.format(label_dir, f.split('.')[0]))
+
+    # pose
+    estimator = BodyPoseEstimator(
+        '/home/dung/Project/AI/tryon/checkpoints/openpose_body_coco_pose_iter_440000.pth')
+    pose_data = estimator(image_src)
+    with open('{}/{}_keypoints.json'.format(pose_dir, f.split('.')[0]), 'w') as outfile:
+        json.dump(pose_data.tolist(), outfile)
+    #edge
+    # image_src = cv2.imread('{}/{}'.format(root_dir, f), 0)
+    # ret, image_src = cv2.threshold(image_src, 240, 255, cv2.THRESH_BINARY_INV)
+    # cv2.imwrite('{}/{}'.format(edge_dir, f), image_src)

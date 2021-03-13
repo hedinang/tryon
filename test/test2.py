@@ -11,7 +11,7 @@ from torch.autograd import Variable
 from tensorboardX import SummaryWriter
 import cv2
 import datetime
-from data.aligned_dataset import AlignedDataset
+from data.aligned_dataset2 import AlignedDataset
 from torch.utils.data import DataLoader
 SIZE = 320
 NC = 14
@@ -76,49 +76,42 @@ def changearm(old_label):
 def main():
     opt = Options().parse()
     dataset = AlignedDataset(opt)
-    dataloader = DataLoader(
-        dataset,
-        batch_size=opt.batchSize,
-        shuffle=not opt.serial_batches,
-        num_workers=int(opt.nThreads))
-    dataset_size = len(dataset)
-    print(f'training images = {dataset_size}')
-
+    data = dataset.transform(
+        '/home/dung/Project/AI/DeepFashion_Try_On/Data_preprocessing/ACGPN_traindata/train_img/000024_0.jpg',
+        '/home/dung/Project/AI/DeepFashion_Try_On/Data_preprocessing/ACGPN_traindata/train_color/000052_1.jpg')
     model = Inference(opt)
-
     model = torch.nn.DataParallel(model, device_ids=opt.gpu_ids)
-    for _, data in enumerate(dataloader):
-        mask_clothes = torch.FloatTensor(
-            (data['label'].cpu().numpy() == 4).astype(np.int))
-        mask_fore = torch.FloatTensor(
-            (data['label'].cpu().numpy() > 0).astype(np.int))
-        img_fore = data['image'] * mask_fore
-        all_clothes_label = changearm(data['label'])
+    mask_clothes = torch.FloatTensor(
+        (data['label'].cpu().numpy() == 4).astype(np.int))
+    mask_fore = torch.FloatTensor(
+        (data['label'].cpu().numpy() > 0).astype(np.int))
+    img_fore = data['image'] * mask_fore
+    all_clothes_label = changearm(data['label'])
 
-        fake_image, warped_cloth, refined_cloth = model(data['label'].cuda(), data['edge'].cuda(),
-                                                        img_fore.cuda(), mask_clothes.cuda(), data['color'].cuda(
-        ), all_clothes_label.cuda(), data['image'].cuda(),
-            data['pose'].cuda(), data['image'].cuda(), mask_fore.cuda())
+    fake_image, warped_cloth, refined_cloth = model(data['label'].cuda(), data['edge'].cuda(),
+                                                    img_fore.cuda(), mask_clothes.cuda(), data['color'].cuda(
+    ), all_clothes_label.cuda(), data['image'].cuda(),
+        data['pose'].cuda(), data['image'].cuda(), mask_fore.cuda())
 
-        # make output folders
-        output_dir = os.path.join(opt.results_dir, opt.phase)
-        fake_image_dir = os.path.join(output_dir, 'try-on')
-        os.makedirs(fake_image_dir, exist_ok=True)
-        warped_cloth_dir = os.path.join(output_dir, 'warped_cloth')
-        os.makedirs(warped_cloth_dir, exist_ok=True)
-        refined_cloth_dir = os.path.join(output_dir, 'refined_cloth')
-        os.makedirs(refined_cloth_dir, exist_ok=True)
+    # make output folders
+    output_dir = os.path.join(opt.results_dir, opt.phase)
+    fake_image_dir = os.path.join(output_dir, 'try-on')
+    os.makedirs(fake_image_dir, exist_ok=True)
+    warped_cloth_dir = os.path.join(output_dir, 'warped_cloth')
+    os.makedirs(warped_cloth_dir, exist_ok=True)
+    refined_cloth_dir = os.path.join(output_dir, 'refined_cloth')
+    os.makedirs(refined_cloth_dir, exist_ok=True)
 
-        # save output
-        for j in range(opt.batchSize):
-            name = data['path'][j].split('/')[-1]
-            print("Saving", name)
-            util.save_tensor_as_image(fake_image[j],
-                                      os.path.join(fake_image_dir, name))
-            util.save_tensor_as_image(warped_cloth[j],
-                                      os.path.join(warped_cloth_dir, name))
-            util.save_tensor_as_image(refined_cloth[j],
-                                      os.path.join(refined_cloth_dir, name))
+    # save output
+    for j in range(opt.batchSize):
+        name = data['path'].split('/')[-1]
+        print("Saving", name)
+        util.save_tensor_as_image(fake_image[j],
+                                  os.path.join(fake_image_dir, name))
+        util.save_tensor_as_image(warped_cloth[j],
+                                  os.path.join(warped_cloth_dir, name))
+        util.save_tensor_as_image(refined_cloth[j],
+                                  os.path.join(refined_cloth_dir, name))
 
 
 if __name__ == '__main__':

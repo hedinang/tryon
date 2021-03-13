@@ -1086,6 +1086,7 @@ class Fashion(torch.nn.Module):
             (label.cpu().numpy() == 11).astype(np.float)).cuda()
         arm2_mask = torch.FloatTensor(
             (label.cpu().numpy() == 13).astype(np.float)).cuda()
+            
         pre_clothes_mask = torch.FloatTensor(
             (pre_clothes_mask.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
 

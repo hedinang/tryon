@@ -9,9 +9,9 @@ import cv2
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from transforms import transform_logits, get_affine_transform
+from parsing.transforms import transform_logits, get_affine_transform
 from collections import OrderedDict
-from AugmentCE2P import resnet101
+from parsing.AugmentCE2P import resnet101
 
 
 class Parsing:
@@ -51,7 +51,7 @@ class Parsing:
             name = k[7:]  # remove `module.`
             new_state_dict[name] = v
         model.load_state_dict(new_state_dict)
-
+        # model.cuda()
         model.eval()
         transform = transforms.Compose([
             transforms.ToTensor(),
@@ -88,21 +88,6 @@ class Parsing:
 
         for i in range(h):
             for j in range(w):
-                # self.label = ['Background', 'Hat', 'Hair', 'Glove', 'Sunglasses', 'Upper-clothes', 'Dress', 'Coat',
-                #       'Socks', 'Pants', 'Jumpsuits', 'Scarf', 'Skirt', 'Face', 'Left-arm', 'Right-arm',
-                #       'Left-leg', 'Right-leg', 'Left-shoe', 'Right-shoe']
-                # 0 -> Background
-                # 1 -> Hair
-                # 4 -> Upclothes
-                # 5 -> Left-shoe
-                # 6 -> Right-shoe
-                # 7 -> Noise
-                # 8 -> Pants
-                # 9 -> Left_leg
-                # 10 -> Right_leg
-                # 11 -> Left_arm
-                # 12 -> Face
-                # 13 -> Right_arm
                 if parsing_result[i][j] == 1 or parsing_result[i][j] == 3 or parsing_result[i][j] == 4 or\
                         parsing_result[i][j] == 6 or parsing_result[i][j] == 7 or parsing_result[i][j] == 8 or\
                         parsing_result[i][j] == 10 or parsing_result[i][j] == 11 or parsing_result[i][j] == 12 or\
@@ -126,5 +111,5 @@ class Parsing:
 
                 elif parsing_result[i][j] == 14:
                     parsing_result[i][j] = 11
-        # return parsing_result
-        return Image.fromarray(np.uint8(parsing_result))
+
+        return Image.fromarray(np.uint8(parsing_result)).convert('L')

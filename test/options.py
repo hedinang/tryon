@@ -11,13 +11,13 @@ class Options:
         # experiment specifics
         self.parser.add_argument('--name', type=str, default='label2city', help='name of the experiment. It decides where to store samples and models')        
         self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-        self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
+        self.parser.add_argument('--checkpoints_dir', type=str, default='/home/dung/Project/AI/tryon_fashion/DeepFashion_Try_On/checkpoints', help='models are saved here')
         self.parser.add_argument('--model', type=str, default='pix2pixHD', help='which model to use')
         self.parser.add_argument('--norm', type=str, default='instance', help='instance normalization or batch normalization')        
         self.parser.add_argument('--use_dropout', action='store_true', help='use dropout for the generator')
         self.parser.add_argument('--data_type', default=32, type=int, choices=[8, 16, 32], help="Supported data type i.e. 8, 16, 32 bit")
         self.parser.add_argument('--verbose', action='store_true', default=False, help='toggles verbose')
-        self.parser.add_argument('--pose_model', type=str, action='store_true', default='/home/dung/Project/AI/tryon/checkpoints/openpose_body_coco_pose_iter_440000.pth', help='toggles verbose')
+        self.parser.add_argument('--pose_model', type=str, default='/home/dung/Project/AI/tryon/checkpoints/openpose_body_coco_pose_iter_440000.pth', help='toggles verbose')
 
         # input/output sizes       
         self.parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
@@ -29,7 +29,7 @@ class Options:
 
         # for setting inputs
         self.parser.add_argument('--dataroot', type=str,
-                                 default='/home/dung/Project/AI/DeepFashion_Try_On/ACGPN_inference/Data_preprocessing') 
+                                 default='/home/dung/Project/AI/tryon_fashion/DeepFashion_Try_On/Data_preprocessing') 
         self.parser.add_argument('--resize_or_crop', type=str, default='scale_width', help='scaling and cropping of images at load time [resize_and_crop|crop|scale_width|scale_width_and_crop]')
         self.parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')        
         self.parser.add_argument('--no_flip', action='store_true', help='if specified, do not flip the images for data argumentation') 
@@ -58,10 +58,10 @@ class Options:
 
         # for training
         self.parser.add_argument('--continue_train', action='store_true', help='continue training: load the latest model')
-        self.parser.add_argument('--load_pretrain', type=str, default='/home/dung/Project/AI/DeepFashion_Try_On/ACGPN_inference/checkpoints/label2city', help='load the pretrained model from the specified location')
+        self.parser.add_argument('--load_pretrain', type=str, default='/home/dung/Project/AI/tryon_fashion/DeepFashion_Try_On/checkpoints/label2city', help='load the pretrained model from the specified location')
         self.parser.add_argument('--which_epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
         self.parser.add_argument('--results_dir', type=str, default='./results/', help='saves results here.')
-        self.parser.add_argument('--phase', type=str, default='test', help='train, val, test, etc')
+        self.parser.add_argument('--phase', type=str, default='train', help='train, val, test, etc')
         self.parser.add_argument('--niter', type=int, default=100, help='# of iter at starting learning rate')
         self.parser.add_argument('--niter_decay', type=int, default=100, help='# of iter to linearly decay learning rate to zero')
         self.parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')

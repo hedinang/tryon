@@ -111,23 +111,10 @@ class AlignedDataset:
         estimator = BodyPoseEstimator(self.opt.pose_model)
         image_src = cv2.imread(B_path)
         pose_data = estimator(image_src)
-        pose_data = pose_data.reshape((-1, 3))
-
         point_num = pose_data.shape[0]
-        pose_map = torch.zeros(point_num, self.fine_height, self.fine_width)
-        r = self.radius
-        im_pose = Image.new('L', (self.fine_width, self.fine_height))
-        pose_draw = ImageDraw.Draw(im_pose)
+        pose_map = torch.zeros(point_num, self.fine_height, self.fine_width)        
         for i in range(point_num):
             one_map = Image.new('L', (self.fine_width, self.fine_height))
-            draw = ImageDraw.Draw(one_map)
-            pointx = pose_data[i, 0]
-            pointy = pose_data[i, 1]
-            if pointx > 1 and pointy > 1:
-                draw.rectangle((pointx-r, pointy-r, pointx +
-                                r, pointy+r), 'white', 'white')
-                pose_draw.rectangle(
-                    (pointx-r, pointy-r, pointx+r, pointy+r), 'white', 'white')
             one_map = transform_B(one_map.convert('RGB'))
             pose_map[i] = one_map[0]
         P_tensor = pose_map

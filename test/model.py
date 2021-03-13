@@ -1288,4 +1288,15 @@ class Fashion(torch.nn.Module):
 class Inference(Fashion):
     # why real image  =  grid
     def forward(self, label, pre_clothes_mask, img_fore, clothes_mask, clothes, all_clothes_label, real_image, pose, grid, mask_fore):
+        label = torch.unsqueeze(label, 0)
+        pre_clothes_mask = torch.unsqueeze(pre_clothes_mask, 0)
+        img_fore = torch.unsqueeze(img_fore, 0)
+        clothes_mask = torch.unsqueeze(clothes_mask, 0)
+        clothes = torch.unsqueeze(clothes, 0)
+        all_clothes_label = torch.unsqueeze(all_clothes_label, 0)
+        real_image = torch.unsqueeze(real_image, 0)
+        pose = torch.unsqueeze(pose, 0)
+        grid = torch.unsqueeze(grid, 0)
+        mask_fore = torch.unsqueeze(mask_fore, 0)
+
         return self.inference(label, pre_clothes_mask, img_fore, clothes_mask, clothes, all_clothes_label, real_image, pose, grid, mask_fore)

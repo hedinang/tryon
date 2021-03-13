@@ -1,4 +1,3 @@
-
 import os.path
 from data.image_folder import make_dataset, get_params, get_transform, normalize
 from PIL import Image
@@ -8,29 +7,32 @@ import numpy as np
 import os.path as osp
 from PIL import ImageDraw
 import cv2
-from estimator import BodyPoseEstimator
+from data.estimator import BodyPoseEstimator
 from utils import draw_body_connections, draw_keypoints
+from parsing.human_parsing import Parsing
 
 
 class AlignedDataset:
     def __init__(self, opt):
+        self.parsing = Parsing()
         self.opt = opt
         self.root = opt.dataroot
         self.diction = {}
-
         self.fine_height = 256
         self.fine_width = 192
         self.radius = 5
-
-        # input B (person images try)
+        # input B (real images)
         dir_B = '_img'
         self.dir_B = os.path.join(opt.dataroot, opt.phase + dir_B)
         self.B_paths = sorted(make_dataset(self.dir_B))
+        self.BR_paths = sorted(make_dataset(self.dir_B))
+
+        # input A (label maps)
 
         self.dataset_size = len(self.B_paths)
         self.build_index(self.B_paths)
 
-        # input E (edge maps)
+        # input E (edge_maps)
         dir_E = '_edge'
         self.dir_E = os.path.join(opt.dataroot, opt.phase + dir_E)
         self.E_paths = sorted(make_dataset(self.dir_E))
@@ -40,32 +42,24 @@ class AlignedDataset:
         dir_M = '_mask'
         self.dir_M = os.path.join(opt.dataroot, opt.phase + dir_M)
         self.M_paths = sorted(make_dataset(self.dir_M))
+        self.MR_paths = make_dataset(self.dir_M)
 
         # input MC(color_masks)
         dir_MC = '_colormask'
         self.dir_MC = os.path.join(opt.dataroot, opt.phase + dir_MC)
         self.MC_paths = sorted(make_dataset(self.dir_MC))
-
+        self.MCR_paths = make_dataset(self.dir_MC)
         # input C(color)
         dir_C = '_color'
         self.dir_C = os.path.join(opt.dataroot, opt.phase + dir_C)
         self.C_paths = sorted(make_dataset(self.dir_C))
         self.CR_paths = make_dataset(self.dir_C)
-        # self.build_index(self.C_paths)
-
-        # input A test (label maps)
-        if not (opt.isTrain):
-            dir_A = '_A' if self.opt.label_nc == 0 else '_label'
-            self.dir_A = os.path.join(opt.dataroot, opt.phase + dir_A)
-            self.A_paths = sorted(make_dataset(self.dir_A))
 
     def build_index(self, dirs):
-        # ipdb.set_trace()
+
         for k, dir in enumerate(dirs):
             name = dir.split('/')[-1]
             name = name.split('-')[0]
-
-            # print(name)
             for k, d in enumerate(dirs[max(k-20, 0):k+20]):
                 if name in d:
                     if name not in self.diction.keys():
@@ -75,22 +69,30 @@ class AlignedDataset:
                         self.diction[name].append(d)
 
     def __getitem__(self, index):
-        # A_path = self.A_paths[index]
-        A_path = osp.join(self.dir_A, h_name.replace(".jpg", ".png"))
-        
-        A = Image.open(A_path).convert('L')
-        params = get_params(self.opt, A.size)
-        transform_A = get_transform(
-            self.opt, params, method=Image.NEAREST, normalize=False)
-
-
-        A_tensor = transform_A(A) * 255.0
-        # input B (person images)
+        # input B (real images)
         B_path = self.B_paths[0]
         B = Image.open(B_path).convert('RGB')
+        params = get_params(self.opt, B.size)
         transform_B = get_transform(self.opt, params)
         B_tensor = transform_B(B)
-        # BR_tensor = transform_B(BR)
+
+        # A_path = self.A_paths[index]
+        A = cv2.imread(B_path, cv2.IMREAD_COLOR)
+        A = self.parsing(A)
+
+        transform_A = get_transform(
+            self.opt, params, method=Image.NEAREST, normalize=False)
+        A_tensor = transform_A(A) * 255.0
+
+        # input M (masks)
+        MR_path = self.MR_paths[np.random.randint(12000)]
+        MR = Image.open(MR_path).convert('L')
+        M_tensor = transform_A(MR)
+
+        ### input_MC (colorMasks)
+        MCR_path = B_path  # self.MCR_paths[1]
+        MCR = Image.open(MCR_path).convert('L')
+        MC_tensor = transform_A(MCR)
 
         ### input_C (color)
         # print(self.C_paths)
@@ -99,13 +101,13 @@ class AlignedDataset:
         C_tensor = transform_B(C)
 
         # Edge
-        E_path = self.E_paths[1]
-        # print(E_path)
-        E = Image.open(E_path).convert('L')
+        E = cv2.imread(C_path, 0)
+        ret, E = cv2.threshold(E, 240, 255, cv2.THRESH_BINARY_INV)
+
+        E = Image.fromarray(E)
         E_tensor = transform_A(E)
 
         # Pose
-
         estimator = BodyPoseEstimator(self.opt.pose_model)
         image_src = cv2.imread(B_path)
         pose_data = estimator(image_src)
@@ -131,10 +133,16 @@ class AlignedDataset:
         P_tensor = pose_map
 
         return {
-            'label': A_tensor, 'image': B_tensor,
-            'name': A_path.split("/")[-1].split("\\")[0], 'edge': E_tensor,
-            'color': C_tensor, 'pose': P_tensor
+            
+            'label': A_tensor, 'image': B_tensor, 'path': B_path, 'edge': E_tensor,
+            'color': C_tensor, 'mask': M_tensor, 'colormask': MC_tensor, 'pose': P_tensor
         }
 
     def __len__(self):
-        return len(self.A_paths) // self.opt.batchSize * self.opt.batchSize
+        return len(self.B_paths) // self.opt.batchSize * self.opt.batchSize
+
+# return {
+#             'label': A_tensor, 'image': B_tensor,
+#             'name': A_path.split("/")[-1].split("\\")[0], 'edge': E_tensor,
+#             'color': C_tensor, 'pose': P_tensor
+#         }
