@@ -1,9 +1,9 @@
 
 import time
 from collections import OrderedDict
-from options import Options
-from model import Fashion
-import util.util as util
+from train.options import Options
+from train.model import Fashion
+import train.util.util as util
 import os
 import numpy as np
 import torch
@@ -11,7 +11,7 @@ from torch.autograd import Variable
 from tensorboardX import SummaryWriter
 import cv2
 import datetime
-from data.aligned_dataset import AlignedDataset
+from train.data.aligned_dataset import AlignedDataset
 from torch.utils.data import DataLoader
 writer = SummaryWriter('runs/uniform_all')
 NC = 14

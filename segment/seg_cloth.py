@@ -16,9 +16,8 @@ from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter('runs/log')
 model = UNet2(3, 2)
 device = torch.device('cuda')
+model.load_state_dict(torch.load('/home/dung/Project/AI/tryon/segment/2.pth', map_location="cuda:0"))
 model.to(device)
-model = torch.load('/home/dung/Project/AI/tryon/segment/1.pth')
-
 class DeepFashion(Dataset):
     def __init__(self, root):
         self.root = root
@@ -155,9 +154,9 @@ for epoch in range(start_epoch, total_epoch):
                 eta))
             i += 1
             if i % 100 == 0:
-                torch.save(model, '1.pth')
+                torch.save(model.state_dict(), '2.pth')
         except Exception:
             continue
-
+    torch.save(model.state_dict(), '2.pth')
     print('end epoch ', epoch)
     np.savetxt(iter_path, (epoch + 1, 0), delimiter=',', fmt='%d')

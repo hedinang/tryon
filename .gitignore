@@ -6,5 +6,7 @@ checkpoints
 convert
 segment/1.pth
 segment/1.zip
+segment/2.pth
+segment/segment_cloth.zip
 segment/runs/log
 .vscode
